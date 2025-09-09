@@ -1,4 +1,6 @@
-abstract class User {
+import { userRole } from "../types/user";
+
+export abstract class User {
   private static _nextUserId: number = 1;
   private readonly id: string;
 
@@ -26,6 +28,13 @@ abstract class User {
 
     this._name = newName.trim();
   }
+  set email(newEmail: string) {
+    if (!newEmail || newEmail.trim().length === 0) {
+      throw new Error("Email cannot be empty");
+    }
+    this._email = newEmail.trim();
+  }
 
-  
+  abstract getRole(): userRole;
+  abstract getPermissions(): string[];
 }
