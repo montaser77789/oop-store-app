@@ -1,6 +1,6 @@
 import { Catagory } from "../types/catagory";
 
-class Product {
+export class Product {
   public readonly id: number;
 
   private static nextId: number = 1;
@@ -39,6 +39,15 @@ class Product {
       this._price = newPrice;
     } else {
       throw new Error("Price must be greater than 0");
+    }
+  }
+
+  reduceStock(quantity: number): boolean {
+    if (quantity > 0) {
+      this._stock -= quantity;
+      return true;
+    } else {
+      return false;
     }
   }
 }
