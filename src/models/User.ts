@@ -1,4 +1,4 @@
-import { userRole } from "../types/user";
+import { adminPermissions, customerPermissions, userRole } from "../types/user";
 
 export abstract class User {
   private static _nextUserId: number = 1;
@@ -21,13 +21,12 @@ export abstract class User {
     if (!newName || newName.trim().length === 0) {
       throw new Error("Name cannot be empty");
     }
-
     if (newName.trim().length < 2) {
       throw new Error("Name must be at least 2 characters long!");
     }
-
     this._name = newName.trim();
   }
+  
   set email(newEmail: string) {
     if (!newEmail || newEmail.trim().length === 0) {
       throw new Error("Email cannot be empty");
@@ -36,5 +35,5 @@ export abstract class User {
   }
 
   abstract getRole(): userRole;
-  abstract getPermissions(): string[];
+  abstract getPermissions(): customerPermissions[] | adminPermissions[];
 }

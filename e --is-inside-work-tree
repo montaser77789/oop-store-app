@@ -1,0 +1,142 @@
+[1mdiff --git a/src/models/Admin.ts b/src/models/Admin.ts[m
+[1mindex e69de29..734213e 100644[m
+[1m--- a/src/models/Admin.ts[m
+[1m+++ b/src/models/Admin.ts[m
+[36m@@ -0,0 +1,25 @@[m
+[32m+[m[32mimport { adminPermissions, userRole } from "../types/user";[m
+[32m+[m[32mimport { User } from "./User";[m
+[32m+[m
+[32m+[m[32mexport class Admin extends User {[m
+[32m+[m[32m  constructor(name: string, email: string) {[m
+[32m+[m[32m    super(name, email);[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  getRole(): userRole {[m
+[32m+[m[32m    return "Admin";[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  getPermissions(): adminPermissions[] {[m
+[32m+[m[32m    return [[m
+[32m+[m[32m      "create_product",[m
+[32m+[m[32m      "update_product",[m
+[32m+[m[32m      "delete_product",[m
+[32m+[m[32m      "view_product",[m
+[32m+[m[32m      "update_order",[m
+[32m+[m[32m      "delete_order",[m
+[32m+[m[32m      "view_order",[m
+[32m+[m[32m      "create_order",[m
+[32m+[m[32m    ];[m
+[32m+[m[32m  }[m
+[32m+[m[32m}[m
+[1mdiff --git a/src/models/User.ts b/src/models/User.ts[m
+[1mindex 13c838e..78ab552 100644[m
+[1m--- a/src/models/User.ts[m
+[1m+++ b/src/models/User.ts[m
+[36m@@ -1,4 +1,4 @@[m
+[31m-import { userRole } from "../types/user";[m
+[32m+[m[32mimport { adminPermissions, customerPermissions, userRole } from "../types/user";[m
+ [m
+ export abstract class User {[m
+   private static _nextUserId: number = 1;[m
+[36m@@ -21,13 +21,12 @@[m [mexport abstract class User {[m
+     if (!newName || newName.trim().length === 0) {[m
+       throw new Error("Name cannot be empty");[m
+     }[m
+[31m-[m
+     if (newName.trim().length < 2) {[m
+       throw new Error("Name must be at least 2 characters long!");[m
+     }[m
+[31m-[m
+     this._name = newName.trim();[m
+   }[m
+[32m+[m[41m  [m
+   set email(newEmail: string) {[m
+     if (!newEmail || newEmail.trim().length === 0) {[m
+       throw new Error("Email cannot be empty");[m
+[36m@@ -36,5 +35,5 @@[m [mexport abstract class User {[m
+   }[m
+ [m
+   abstract getRole(): userRole;[m
+[31m-  abstract getPermissions(): string[];[m
+[32m+[m[32m  abstract getPermissions(): customerPermissions[] | adminPermissions[];[m
+ }[m
+[1mdiff --git a/src/services/Store.ts b/src/services/Store.ts[m
+[1mindex add7241..b955555 100644[m
+[1m--- a/src/services/Store.ts[m
+[1m+++ b/src/services/Store.ts[m
+[36m@@ -1,3 +1,5 @@[m
+[32m+[m[32mimport { Admin } from "../models/Admin";[m
+[32m+[m[32mimport { Customer } from "../models/Customer";[m
+ import { Order } from "../models/Order";[m
+ import { Product } from "../models/Product";[m
+ import { User } from "../models/User";[m
+[36m@@ -31,7 +33,6 @@[m [mclass Store {[m
+     return this.users.length;[m
+   }[m
+ [m
+[31m-  [m
+   // Setters with validation[m
+   set storeName(storeName: string) {[m
+     if (!storeName || storeName.trim().length === 0) {[m
+[36m@@ -52,4 +53,38 @@[m [mclass Store {[m
+ [m
+     this._isOpen = isOpen;[m
+   }[m
+[32m+[m
+[32m+[m[32m  public registerUser(name: string, email: string, isAdmin: boolean): User {[m
+[32m+[m[32m    if (!this._isOpen) {[m
+[32m+[m[32m      throw new Error("Store is closed");[m
+[32m+[m[32m    }[m
+[32m+[m[32m    if (!name || name.trim().length === 0) {[m
+[32m+[m[32m      throw new Error("Name cannot be empty");[m
+[32m+[m[32m    }[m
+[32m+[m[32m    if (!email || !this.isValidEmail(email)) {[m
+[32m+[m[32m      throw new Error("Invalid email");[m
+[32m+[m[32m    }[m
+[32m+[m[32m    if (this.users.some((user) => user.email === email)) {[m
+[32m+[m[32m      throw new Error("User already exists");[m
+[32m+[m[32m    }[m
+[32m+[m[32m    if (isAdmin) {[m
+[32m+[m[32m      const newAdmin = new Admin(name, email);[m
+[32m+[m[32m      this.users.push(newAdmin);[m
+[32m+[m[32m      return newAdmin;[m
+[32m+[m[32m    } else {[m
+[32m+[m[32m      const newCustomer = new Customer(name, email);[m
+[32m+[m[32m      this.users.push(newCustomer);[m
+[32m+[m[32m      return newCustomer;[m
+[32m+[m[32m    }[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  /**[m
+[32m+[m[32m   * Validates an email address[m
+[32m+[m[32m   * @param email - The email address to validate[m
+[32m+[m[32m   * @returns True if the email address is valid, false otherwise[m
+[32m+[m[32m   */[m
+[32m+[m[32m  private isValidEmail(email: string): boolean {[m
+[32m+[m[32m    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;[m
+[32m+[m[32m    return emailRegex.test(email);[m
+[32m+[m[32m  }[m
+ }[m
+[1mdiff --git a/src/types/user.ts b/src/types/user.ts[m
+[1mindex 2f8a139..6758f8a 100644[m
+[1m--- a/src/types/user.ts[m
+[1m+++ b/src/types/user.ts[m
+[36m@@ -1,3 +1,15 @@[m
+[31m-export type userRole = "admin" | "customer";[m
+[31m-export type customerPermissions = "create_order" | "update_order" | "delete_order" | "view_order";[m
+[31m-export type adminPermissions = "create_product" | "update_product" | "delete_product" | "view_product" | "create_order" | "update_order" | "delete_order" | "view_order";[m
+[32m+[m[32mexport type userRole = "Admin" | "customer";[m
+[32m+[m[32mexport type customerPermissions =[m
+[32m+[m[32m  | "create_order"[m
+[32m+[m[32m  | "update_order"[m
+[32m+[m[32m  | "delete_order"[m
+[32m+[m[32m  | "view_order";[m
+[32m+[m[32mexport type adminPermissions =[m
+[32m+[m[32m  | "create_product"[m
+[32m+[m[32m  | "update_product"[m
+[32m+[m[32m  | "delete_product"[m
+[32m+[m[32m  | "view_product"[m
+[32m+[m[32m  | "create_order"[m
+[32m+[m[32m  | "update_order"[m
+[32m+[m[32m  | "delete_order"[m
+[32m+[m[32m  | "view_order";[m
